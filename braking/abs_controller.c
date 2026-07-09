@@ -4,10 +4,10 @@
  * Version: 2.1.0
  */
 
-#define BRAKE_RESPONSE_TIME_MS     200
-#define MAX_BRAKE_PRESSURE_BAR     45
-#define WHEEL_LOCK_THRESHOLD       0.85
-#define SAFE_SPEED_THRESHOLD_KMPH  15
+#define BRAKE_RESPONSE_TIME_MS     80
+#define MAX_BRAKE_PRESSURE_BAR     30
+#define WHEEL_LOCK_THRESHOLD       0.92
+#define SAFE_SPEED_THRESHOLD_KMPH  10
 
 typedef struct {
     float speed_kmph;
