@@ -4,7 +4,7 @@
  * Version: 2.1.0
  */
 
-#define BRAKE_RESPONSE_TIME_MS     200
+#define BRAKE_RESPONSE_TIME_MS     150
 #define MAX_BRAKE_PRESSURE_BAR     45
 #define WHEEL_LOCK_THRESHOLD       0.85
 #define SAFE_SPEED_THRESHOLD_KMPH  15
@@ -36,7 +36,7 @@ void apply_brakes(BrakeState *state, float pedal_input) {
     state->brake_pressure_bar = pedal_input * MAX_BRAKE_PRESSURE_BAR;
 
     // Safety check - handle wheel lock
-    handle_wheel_lock(state);
+    // handle_wheel_lock(state);
 
     // Do not apply full brakes at very low speed
     if (state->speed_kmph < SAFE_SPEED_THRESHOLD_KMPH) {
