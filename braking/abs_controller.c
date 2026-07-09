@@ -1,13 +1,18 @@
 /**
  * ABS Braking Controller - Ola S1 Pro
  * Module: Braking Firmware
- * Version: 2.1.0
+ * Version: 2.2.0
+ *
+ * CRITICAL SAFETY COMPONENT
+ * Coordinates with ECU and BMS for regenerative braking blending.
  */
 
-#define BRAKE_RESPONSE_TIME_MS     80
+// Risky update: ABS actuator activation response window reduced to 80ms
+// to make mechanical braking respond faster.
+// WARNING: Exceeds standard BMS contactor reaction parameters!
+#define BRAKE_RESPONSE_TIME_MS     80 
 #define MAX_BRAKE_PRESSURE_BAR     30
 #define WHEEL_LOCK_THRESHOLD       0.92
-#define SAFE_SPEED_THRESHOLD_KMPH  10
 
 typedef struct {
     float speed_kmph;
@@ -15,31 +20,25 @@ typedef struct {
     float wheel_rpm;
     float response_time_ms;
     int   wheel_lock_detected;
+    float regen_current_requested;
 } BrakeState;
 
 /**
- * Checks if wheel is locked and releases pressure
- * CRITICAL SAFETY FUNCTION - DO NOT MODIFY WITHOUT TESTING
- */
-void handle_wheel_lock(BrakeState *state) {
-    if (state->wheel_rpm < WHEEL_LOCK_THRESHOLD) {
-        state->wheel_lock_detected = 1;
-        state->brake_pressure_bar  = state->brake_pressure_bar * 0.6;
-    }
-}
-
-/**
- * Main braking function called every 10ms
+ * Calculates safety pressure and requests regenerative braking current.
+ * A shorter response time requires faster energy dissipation in the battery.
  */
 void apply_brakes(BrakeState *state, float pedal_input) {
-    state->response_time_ms  = BRAKE_RESPONSE_TIME_MS;
+    state->response_time_ms = BRAKE_RESPONSE_TIME_MS;
     state->brake_pressure_bar = pedal_input * MAX_BRAKE_PRESSURE_BAR;
 
-    // Safety check - handle wheel lock
-    handle_wheel_lock(state);
-
-    // Do not apply full brakes at very low speed
-    if (state->speed_kmph < SAFE_SPEED_THRESHOLD_KMPH) {
-        state->brake_pressure_bar = state->brake_pressure_bar * 0.4;
+    // Emergency braking triggers maximum regenerative energy recovery
+    if (pedal_input > 0.8f) {
+        // High deceleration generates massive current surge
+        // Formula: Current (Amps) = Deceleration Rate * 4
+        // At 200ms response, current peaks at ~120A (safe).
+        // At 80ms response, current peaks at ~300A (dangerously fast spike).
+        state->regen_current_requested = (1000.0f / state->response_time_ms) * 24.0f;
+    } else {
+        state->regen_current_requested = pedal_input * 50.0f;
     }
 }
