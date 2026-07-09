@@ -1,61 +1,62 @@
-name: 🛡️ ZeroDrive OTA Safety Check
+# ──────────────────────────────────────────────
+# ZeroDrive — Multi-Repo OTA Safety Analysis
+# ──────────────────────────────────────────────
+# Triggers on every PR to main/master.
+# Pulls diffs from ALL repos in zerodrive.config.json,
+# sends combined context to Groq AI, posts a risk
+# report on the PR, and blocks merge if risk is HIGH.
+# ──────────────────────────────────────────────
+
+name: ZeroDrive OTA Safety Analysis
 
 on:
   pull_request:
-    branches: [master]
+    branches: [main, master]
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   zerodrive-analyze:
-    name: ZeroDrive Risk Analysis
+    name: 🚗 ZeroDrive Safety Check
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      # ── 1. Checkout the repo (so we have zerodrive.config.json + script) ──
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
+      # ── 2. Python setup ──
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # ── 3. Install dependencies ──
       - name: Install dependencies
         run: pip install requests
 
-      - name: Get PR code diff
-        id: diff
-        run: |
-          git diff origin/main...HEAD > pr_diff.txt
-          echo "Diff captured successfully"
-          cat pr_diff.txt
-
-      - name: Run ZeroDrive AI Analysis
-        id: analysis
+      # ── 4. Run the multi-repo analyzer ──
+      #
+      # GH_PAT is a Personal Access Token with `repo` scope.
+      # It is required to read diffs from OTHER repos in the
+      # config. The default GITHUB_TOKEN only has access to
+      # the current repository.
+      #
+      # To create one:
+      #   GitHub → Settings → Developer settings →
+      #   Personal access tokens → Tokens (classic) →
+      #   Generate → scope: repo
+      #
+      # Then add it as a repo secret named GH_PAT.
+      # ─────────────────────────────────────────
+      - name: Run ZeroDrive Analysis
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: python zerodrive_analyze.py
-
-      - name: Post result comment on PR
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const report = fs.readFileSync('risk_report.txt', 'utf8');
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: report
-            });
-
-      - name: Fail pipeline if HIGH risk
-        run: |
-          RISK=$(cat risk_level.txt)
-          echo "Risk level: $RISK"
-          if [ "$RISK" = "HIGH" ]; then
-            echo "🔴 ZeroDrive blocked this PR - HIGH RISK detected"
-            exit 1
-          else
-            echo "✅ ZeroDrive approved this PR - Safe to merge"
-          fi
