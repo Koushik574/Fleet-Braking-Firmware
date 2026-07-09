@@ -7,9 +7,9 @@
     {
       "name": "braking-firmware",
       "owner": "Koushik574",
-      "repo": "Fleet-Braking-Firmware",
+      "repo": "Fleet_Braking_System",
       "module": "ABS Braking System",
-      "branch": "main"
+      "branch": "master"
     },
     {
       "name": "motor-controller",
@@ -21,7 +21,7 @@
     {
       "name": "battery-management",
       "owner": "Koushik574",
-      "repo": "Fleet-Battery-Management",
+      "repo": "Fleet_Battery_Management",
       "module": "Battery Management System",
       "branch": "main"
     },
