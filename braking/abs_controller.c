@@ -11,7 +11,7 @@
 // MUST align with BMS contactor reaction time (typically > 180ms)
 // to prevent battery overcurrent when regenerative braking is active.
 #define BRAKE_RESPONSE_TIME_MS     200 
-#define MAX_BRAKE_PRESSURE_BAR     45
+#define MAX_BRAKE_PRESSURE_BAR     50
 #define WHEEL_LOCK_THRESHOLD       0.85
 
 typedef struct {
